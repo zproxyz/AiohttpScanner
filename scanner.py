@@ -92,37 +92,6 @@ def put_line(path_file):
             os.fsync(file.fileno())
     yield ([])
 
-
-def setup_args():
-    parser = argparse.ArgumentParser(
-        description='AIOHTTP Scanner',
-        epilog='',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-    parser.add_argument(
-        '--timeout',
-        help='HTTP-request timeout',
-        type=int,
-        default=15
-    )
-    parser.add_argument(
-        '--threads',
-        help='Number of threads',
-        type=int,
-        default=50
-    )
-    parser.add_argument(
-        '--chunk',
-        help='Chunk file size',
-        type=int,
-        default=1000
-    )
-
-    args = parser.parse_args()
-
-    return args
-
-
 def load_config(path_file):
     with open(path_file) as json_data_file:
         data = json.load(json_data_file)
@@ -130,7 +99,6 @@ def load_config(path_file):
 
 
 def main():
-    # args = setup_args()
     config_data = load_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/config.json'))
     scanner = Scanner(config_data)
     loop = asyncio.get_event_loop()
