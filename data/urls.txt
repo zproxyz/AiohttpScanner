@@ -1,0 +1,3 @@
+http://sitefortest1.local/
+http://sitefortest2.local/
+http://sitefortest3.local/

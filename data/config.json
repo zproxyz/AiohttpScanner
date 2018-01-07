@@ -1,0 +1,10 @@
+{
+  "settings": {
+    "timeout": 15,
+    "threads": 10
+  },
+  "parse": {
+    "urlAdd": "?test",
+    "contentFind": "You Got Damn Right!"
+  }
+}
