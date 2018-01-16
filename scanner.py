@@ -46,7 +46,7 @@ class Scanner:
                 self.writer.send(response_url)
                 print("{} - Good: {}".format(response_url, self.good))
         self.stats['urls'] += 1
-        if self.stats['urls'] % 1000 == 0:
+        if self.stats['urls'] % self.config_data['settings']['save_every_time'] == 0:
             save_stats(self.path_stats, self.stats)
         self.tasks.remove(future)
 

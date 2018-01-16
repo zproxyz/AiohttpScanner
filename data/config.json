@@ -1,7 +1,8 @@
 {
   "settings": {
     "timeout": 15,
-    "threads": 10
+    "threads": 10,
+    "save_every_time": 1000
   },
   "parse": {
     "urlAdd": "?test",
