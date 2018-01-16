@@ -11,11 +11,18 @@ import concurrent.futures
 from aiohttp import ClientSession, TCPConnector
 
 
+class StatusError(Exception):
+    """Base class for exceptions in this module."""
+    pass
+
+
 class Scanner:
     def __init__(self, config_data):
         self.good = 0
         self.path_data = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/')
-        self.reader = get_line(os.path.join(self.path_data, 'urls.txt'))
+        self.path_stats = os.path.join(self.path_data, 'stats.json')
+        self.stats = load_config(self.path_stats)
+        self.reader = get_line(os.path.join(self.path_data, 'urls.txt'), int(self.stats['urls']))
         self.writer = put_line(os.path.join(self.path_data, 'good.txt'))
         self.config_data = config_data
         self.timeout = self.config_data['settings']['timeout']
@@ -38,23 +45,28 @@ class Scanner:
                 self.good += 1
                 self.writer.send(response_url)
                 print("{} - Good: {}".format(response_url, self.good))
+        self.stats['urls'] += 1
+        if self.stats['urls'] % 1000 == 0:
+            save_stats(self.path_stats, self.stats)
         self.tasks.remove(future)
 
     async def fetch(self, url, session):
         try:
             async with async_timeout.timeout(self.timeout):
                 async with session.get(url, max_redirects=10) as response:
+                    if response.status != 200:
+                        raise StatusError
                     return await response.text(), str(response.url)
         except Exception as ex:
             raise ex
 
     async def bound_fetch(self, url, session):
-        # Getter function with semaphore.
         res = await self.fetch(url, session)
         return res
 
     async def run(self):
         self.writer.send(None)
+        save_stats(self.path_stats, self.stats)
         # Create client session that will ensure we dont open new connection
         # per each request.
         tcp_connector = TCPConnector(verify_ssl=False,
@@ -72,13 +84,17 @@ class Scanner:
                 task.add_done_callback(functools.partial(self._result_callback, url.strip()))
                 self.tasks.append(task)
             await asyncio.gather(*self.tasks, return_exceptions=True)
+            self.stats['urls'] = 0
+            save_stats(self.path_stats, self.stats)
             self.writer.send('Close')
 
 
-def get_line(path_file):
+def get_line(path_file, offset=0):
     with open(path_file) as file:
-        for i in file:
-            yield i
+        for i, line in enumerate(file):
+            if offset != 0 and i < offset:
+                continue
+            yield line
 
 
 def put_line(path_file):
@@ -92,10 +108,16 @@ def put_line(path_file):
             os.fsync(file.fileno())
     yield ([])
 
+
 def load_config(path_file):
     with open(path_file) as json_data_file:
         data = json.load(json_data_file)
     return data
+
+
+def save_stats(path_file, data):
+    with open(path_file, 'w') as outfile:
+        json.dump(data, outfile)
 
 
 def main():
