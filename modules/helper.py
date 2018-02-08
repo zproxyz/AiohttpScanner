@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+from urllib.parse import urlparse
 
 
 class FileHelper:
@@ -10,6 +11,23 @@ class FileHelper:
         with open(path_file) as json_data_file:
             data = json.load(json_data_file)
         return data
+
+    @staticmethod
+    def read_file(path_file):
+        with open(path_file) as file_handler:
+            data = file_handler.read().splitlines()
+        return data
+
+    @staticmethod
+    def get_complete_urls(path_file):
+        result_urls = []
+        urls = FileHelper.read_file(path_file)
+        for url in urls:
+            url_host = urlparse(url).hostname
+            if url_host in result_urls:
+                continue
+            result_urls.append(url_host)
+        return result_urls
 
     @staticmethod
     def get_line(path_file, offset=0):

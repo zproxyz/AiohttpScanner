@@ -4,7 +4,6 @@ import collections
 import asyncio
 import functools
 from urllib.parse import urlparse
-import concurrent.futures
 
 
 class TaskManager:
